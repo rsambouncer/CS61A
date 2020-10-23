@@ -227,7 +227,12 @@ class GUI:
             if existing_ant is not None:
                 print("gamestate.remove_ant('{0}')".format(pname))
                 self.gamestate.remove_ant(pname)
-            return
+                gui.deadinsects.append(gui.insectToId[existing_ant])
+                gui.saveState("deadinsects", gui.deadinsects)
+                self._update_control_panel(self.gamestate)
+                return { "success": 1, "id": -1 } #special id for removing ant 
+            else:
+                return { "error" : "Unable to remove nonexistant ant" }
         insect = None
         try:
             print("gamestate.deploy_ant('{0}', '{1}')".format(pname, ant))
@@ -269,6 +274,7 @@ class HttpHandler(http.server.SimpleHTTPRequestHandler):
                 }.get(path)
         if not action:
             #We could not find a valid route
+            print(":( Could not find valid action for",path)
             return
         form = cgi.FieldStorage(
             fp=self.rfile,
@@ -294,61 +300,14 @@ def dead_insect(ant):
         gui.deadbees.append(gui.beeToId[ant])
         gui.saveState("deadbees", gui.deadbees)
     else:
-        print("idk man")                                    #cheese added
+        print("idk man")
 
 def update():
-    request = urllib.request.Request("https://api.github.com/repos/colinschoen/Ants-Web-Viewer/releases/latest")
-    data = None
-    print("Checking for updates...")
-    try:
-        response = urllib.request.urlopen(request)
-        data = json.loads(response.read().decode('utf-8'))
-    except urllib.request.URLError as e:
-        print('Unable to check for updates')
-
-    if data:
-        release_version = float(data["name"])
-        if release_version > VERSION:
-            print("Local version of", VERSION, "is behind remote version of", release_version)
-            get_update(data["zipball_url"], data["name"])
-        else:
-            print("Local version of", VERSION, "is current with or ahead of remote version of", release_version)
+    print("Updating...")
+    print("No updates needed for gui.py")
 
 def get_update(url, version):
-    request = urllib.request.Request(url)
-    print("Downloading new version...")
-    try:
-        response = urllib.request.urlopen(request)
-        with open(version + ".zip", 'wb') as f:
-            f.write(response.read())
-        f = zipfile.ZipFile(version + ".zip")
-        f.extractall(version)
-        #Delete original archive
-        os.remove(version + ".zip")
-        os.chdir(version)
-        os.chdir(os.listdir()[0])
-        files = os.listdir()
-        dirs = []
-        for f in files:
-            #Skip hidden files and .md files
-            if f[0] == "." or f[-3:] == ".md":
-                continue
-            if os.path.isdir(f):
-                dirs.append(f)
-                continue
-            #Copy the files up two directories
-            shutil.copy(f, "../../" + f)
-        for d in dirs:
-            distutils.dir_util.copy_tree(d, "../../" + d)
-        #Delete our temp directory
-        os.chdir('../..')
-        print("Cleaning up...")
-        shutil.rmtree(version)
-        print("Update complete")
-
-
-    except Exception as e:
-        print("Error:", e)
+    print("You should not be seeing this message. I like cheese.")
 
 
 
